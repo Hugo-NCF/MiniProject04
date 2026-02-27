@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import RecommendedRow from "./RecommendedRow";
 import SelectedMovieDetails from "./SelectedMovieDetails";
 
-function getMovieKey(movie) {
+function defaultMovieKey(movie) {
   return `${movie?.title ?? "movie"}-${movie?.releasing_year ?? ""}-${movie?.director ?? ""}`;
 }
 
@@ -19,11 +19,21 @@ function pickRandomSubset(list, count) {
   return arr.slice(0, Math.min(count, arr.length));
 }
 
-export default function Home({ movies = [], browseSelection = null }) {
+export default function Home({
+  movies = [],
+  browseSelection = null,
+  getMovieKey,
+  wishlistedKeys,
+  onToggleWishlistKey,
+}) {
+  const movieKey = useCallback(
+    (movie) => (getMovieKey ?? defaultMovieKey)(movie),
+    [getMovieKey],
+  );
+
   const [selectedKey, setSelectedKey] = useState(null);
   const [likedKeys, setLikedKeys] = useState(() => new Set());
   const [dislikedKeys, setDislikedKeys] = useState(() => new Set());
-  const [wishlistedKeys, setWishlistedKeys] = useState(() => new Set());
   const [sortMode, setSortMode] = useState("release");
 
   const recommendedMovies = useMemo(() => pickRandomSubset(movies, 12), [movies]);
@@ -90,66 +100,59 @@ export default function Home({ movies = [], browseSelection = null }) {
     return list;
   }, [displayedMovies, sortMode]);
 
-  useEffect(() => {
-    if (!sortedMovies.length) return;
-
-    const stillVisible =
-      selectedKey != null && sortedMovies.some((m) => getMovieKey(m) === selectedKey);
-
-    if (stillVisible) return;
-    setSelectedKey(getMovieKey(sortedMovies[0]));
-  }, [sortedMovies, selectedKey]);
+  const activeSelectedKey = useMemo(() => {
+    if (!sortedMovies.length) return null;
+    if (selectedKey != null && sortedMovies.some((m) => movieKey(m) === selectedKey)) {
+      return selectedKey;
+    }
+    return movieKey(sortedMovies[0]);
+  }, [movieKey, selectedKey, sortedMovies]);
 
   const selectedMovie = useMemo(() => {
-    if (!selectedKey) return null;
-    return movies.find((m) => getMovieKey(m) === selectedKey) ?? null;
-  }, [movies, selectedKey]);
+    if (!activeSelectedKey) return null;
+    return movies.find((m) => movieKey(m) === activeSelectedKey) ?? null;
+  }, [movies, activeSelectedKey, movieKey]);
 
-  const isLiked = selectedKey != null && likedKeys.has(selectedKey);
-  const isDisliked = selectedKey != null && dislikedKeys.has(selectedKey);
-  const isWishlisted = selectedKey != null && wishlistedKeys.has(selectedKey);
+  const isLiked = activeSelectedKey != null && likedKeys.has(activeSelectedKey);
+  const isDisliked = activeSelectedKey != null && dislikedKeys.has(activeSelectedKey);
+  const wishlistSet = wishlistedKeys ?? new Set();
+  const isWishlisted = activeSelectedKey != null && wishlistSet.has(activeSelectedKey);
 
   function toggleLike() {
-    if (!selectedKey) return;
+    if (!activeSelectedKey) return;
 
     setLikedKeys((prev) => {
       const next = new Set(prev);
-      if (next.has(selectedKey)) next.delete(selectedKey);
-      else next.add(selectedKey);
+      if (next.has(activeSelectedKey)) next.delete(activeSelectedKey);
+      else next.add(activeSelectedKey);
       return next;
     });
     setDislikedKeys((prev) => {
       const next = new Set(prev);
-      next.delete(selectedKey);
+      next.delete(activeSelectedKey);
       return next;
     });
   }
 
   function toggleDislike() {
-    if (!selectedKey) return;
+    if (!activeSelectedKey) return;
 
     setDislikedKeys((prev) => {
       const next = new Set(prev);
-      if (next.has(selectedKey)) next.delete(selectedKey);
-      else next.add(selectedKey);
+      if (next.has(activeSelectedKey)) next.delete(activeSelectedKey);
+      else next.add(activeSelectedKey);
       return next;
     });
     setLikedKeys((prev) => {
       const next = new Set(prev);
-      next.delete(selectedKey);
+      next.delete(activeSelectedKey);
       return next;
     });
   }
 
   function toggleWishlist() {
-    if (!selectedKey) return;
-
-    setWishlistedKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(selectedKey)) next.delete(selectedKey);
-      else next.add(selectedKey);
-      return next;
-    });
+    if (!activeSelectedKey) return;
+    onToggleWishlistKey?.(activeSelectedKey);
   }
 
   const listTitle = useMemo(() => {
@@ -182,9 +185,9 @@ export default function Home({ movies = [], browseSelection = null }) {
           movies={sortedMovies}
           sortMode={sortMode}
           onSortModeChange={setSortMode}
-          selectedKey={selectedKey}
-          getMovieKey={getMovieKey}
-          onSelect={(movie) => setSelectedKey(getMovieKey(movie))}
+          selectedKey={activeSelectedKey}
+          getMovieKey={movieKey}
+          onSelect={(movie) => setSelectedKey(movieKey(movie))}
         />
       )}
     </div>

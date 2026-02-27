@@ -7,6 +7,11 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [browseSelection, setBrowseSelection] = useState(null);
+  const [wishlistedKeys, setWishlistedKeys] = useState(() => new Set());
+
+  function getMovieKey(movie) {
+    return `${movie?.title ?? "movie"}-${movie?.releasing_year ?? ""}-${movie?.director ?? ""}`;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -63,8 +68,30 @@ export default function App() {
     setBrowseSelection(selection);
   }
 
+  function toggleWishlistKey(key) {
+    if (!key) return;
+    setWishlistedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function clearWishlist() {
+    setWishlistedKeys(new Set());
+  }
+
   return (
-    <MovieSiteLayout browseOptions={browseOptions} onBrowseSelect={handleBrowseSelect}>
+    <MovieSiteLayout
+      browseOptions={browseOptions}
+      onBrowseSelect={handleBrowseSelect}
+      movies={movies}
+      wishlistedKeys={wishlistedKeys}
+      getMovieKey={getMovieKey}
+      onToggleWishlistKey={toggleWishlistKey}
+      onClearWishlist={clearWishlist}
+    >
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <span className="loading loading-spinner loading-lg" />
@@ -74,7 +101,13 @@ export default function App() {
           <span>{errorMsg}</span>
         </div>
       ) : (
-        <Home movies={movies} browseSelection={browseSelection} />
+        <Home
+          movies={movies}
+          browseSelection={browseSelection}
+          getMovieKey={getMovieKey}
+          wishlistedKeys={wishlistedKeys}
+          onToggleWishlistKey={toggleWishlistKey}
+        />
       )}
     </MovieSiteLayout>
   );
