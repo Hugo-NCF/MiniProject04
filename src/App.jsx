@@ -87,6 +87,7 @@ export default function App() {
       browseOptions={browseOptions}
       onBrowseSelect={handleBrowseSelect}
       movies={movies}
+      loading={loading}
       wishlistedKeys={wishlistedKeys}
       getMovieKey={getMovieKey}
       onToggleWishlistKey={toggleWishlistKey}

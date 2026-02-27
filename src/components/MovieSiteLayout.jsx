@@ -10,6 +10,7 @@ function MovieSiteLayout({
   browseOptions,
   onBrowseSelect,
   movies = [],
+  loading = false,
   wishlistedKeys,
   getMovieKey,
   onToggleWishlistKey,
@@ -49,75 +50,91 @@ function MovieSiteLayout({
     <FaFilm className="text-2xl text-primary" />
     <h1 className="text-2xl font-bold">Movies HD</h1>
 
-    <details className="dropdown group">
-      <summary className="btn btn-ghost list-none">
-        Browse
-        <FaChevronDown className="ml-1 transition-transform group-open:rotate-180" />
+    <details className={`dropdown group ${loading ? "opacity-70 pointer-events-none" : ""}`}>
+      <summary className="btn btn-ghost list-none" aria-disabled={loading}>
+        <span className="flex items-center gap-2">
+          <span>Browse</span>
+          {loading ? (
+            <span className="loading loading-spinner loading-xs" />
+          ) : (
+            <FaChevronDown className="transition-transform group-open:rotate-180" />
+          )}
+        </span>
       </summary>
 
       <ul className="dropdown-content menu bg-base-100 rounded-box z-10 mt-2 w-52 p-2 shadow">
-        <li>
-          <details>
-            <summary>Age group</summary>
-            <ul>
-              {ageGroups.map((g) => (
-                <li key={g}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      onBrowseSelect?.({ type: "age_group", value: g });
-                      closeBrowseDropdown(e);
-                    }}
-                  >
-                    {g}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </details>
-        </li>
+        {loading ? (
+          <li>
+            <div className="flex items-center justify-center py-6">
+              <span className="loading loading-spinner loading-md" />
+            </div>
+          </li>
+        ) : (
+          <>
+            <li>
+              <details>
+                <summary>Age group</summary>
+                <ul>
+                  {ageGroups.map((g) => (
+                    <li key={g}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          onBrowseSelect?.({ type: "age_group", value: g });
+                          closeBrowseDropdown(e);
+                        }}
+                      >
+                        {g}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
 
-        <li>
-          <details>
-            <summary>Genre</summary>
-            <ul>
-              {genres.map((g) => (
-                <li key={g}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      onBrowseSelect?.({ type: "genre", value: g });
-                      closeBrowseDropdown(e);
-                    }}
-                  >
-                    {g}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </details>
-        </li>
+            <li>
+              <details>
+                <summary>Genre</summary>
+                <ul>
+                  {genres.map((g) => (
+                    <li key={g}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          onBrowseSelect?.({ type: "genre", value: g });
+                          closeBrowseDropdown(e);
+                        }}
+                      >
+                        {g}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
 
-        <li>
-          <details>
-            <summary>Year</summary>
-            <ul>
-              {decades.map((d) => (
-                <li key={d?.start ?? d?.label}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      onBrowseSelect?.({ type: "decade", value: d?.start });
-                      closeBrowseDropdown(e);
-                    }}
-                  >
-                    {d?.label ?? String(d)}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </details>
-        </li>
+            <li>
+              <details>
+                <summary>Year</summary>
+                <ul>
+                  {decades.map((d) => (
+                    <li key={d?.start ?? d?.label}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          onBrowseSelect?.({ type: "decade", value: d?.start });
+                          closeBrowseDropdown(e);
+                        }}
+                      >
+                        {d?.label ?? String(d)}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          </>
+        )}
       </ul>
     </details>
   </div>
@@ -180,7 +197,11 @@ function MovieSiteLayout({
             </div>
 
             <div className="mt-4 space-y-2">
-              {wishlistedMovies.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-10">
+                  <span className="loading loading-spinner loading-md" />
+                </div>
+              ) : wishlistedMovies.length === 0 ? (
                 <div className="text-sm text-base-content/70">No wishlisted movies yet.</div>
               ) : (
                 wishlistedMovies.map((m) => (
