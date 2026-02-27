@@ -4,6 +4,8 @@
 
 A Vite + React movie browser that loads a local dataset (public/movies.json), lets users browse by **age group / genre / year (decades)**, sort results, and manage a **wishlist** (with download support).
 
+## Netlify Link
+https://hdmoviesncf.netlify.app/
 
 ## How to run
 
