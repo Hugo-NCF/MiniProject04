@@ -1,4 +1,12 @@
-import { FaChevronDown, FaFilm, FaGithub, FaInfoCircle, FaLock, FaEnvelope } from "react-icons/fa";
+import {
+  FaChevronDown,
+  FaFilm,
+  FaGithub,
+  FaInfoCircle,
+  FaLock,
+  FaEnvelope,
+  FaDownload,
+} from "react-icons/fa";
 import { useCallback, useMemo, useState } from "react";
 
 function defaultMovieKey(movie) {
@@ -33,6 +41,39 @@ function MovieSiteLayout({
     if (!set.size) return [];
     return movies.filter((m) => set.has(movieKey(m)));
   }, [movies, wishlistedKeys, movieKey]);
+
+  function downloadWishlist() {
+    const exportList = wishlistedMovies.map((m) => ({
+      title: m?.title ?? "",
+      director: m?.director ?? "",
+      releasing_year: m?.releasing_year ?? null,
+      genre: m?.genre ?? "",
+      age_group: m?.age_group ?? "",
+      runtime: m?.runtime ?? "",
+      imdb_rating: m?.imdb_rating ?? null,
+      budget: m?.budget ?? "",
+      language: m?.language ?? "",
+      short_description: m?.short_description ?? "",
+    }));
+
+    const json = JSON.stringify(exportList, null, 2);
+    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const filename = `wishlist-movies-${yyyy}-${mm}-${dd}.json`;
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
 
   function closeBrowseDropdown(e) {
     const details = e?.currentTarget?.closest?.("details.dropdown");
@@ -177,6 +218,16 @@ function MovieSiteLayout({
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Wishlist</h2>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline"
+                  onClick={downloadWishlist}
+                  disabled={loading || wishlistCount === 0}
+                  title={loading ? "Loading…" : wishlistCount === 0 ? "No wishlisted movies" : "Download wishlist"}
+                >
+                  <FaDownload />
+                  Download
+                </button>
                 {wishlistCount > 0 && (
                   <button
                     type="button"
