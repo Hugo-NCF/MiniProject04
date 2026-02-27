@@ -1,4 +1,4 @@
-import { FaChevronDown, FaFilm } from "react-icons/fa";
+import { FaChevronDown, FaFilm, FaGithub, FaInfoCircle, FaLock, FaEnvelope } from "react-icons/fa";
 import { useCallback, useMemo, useState } from "react";
 
 function defaultMovieKey(movie) {
@@ -238,9 +238,46 @@ function MovieSiteLayout({
 
       {/* Footer */}
       <footer className="footer footer-center p-4 bg-base-100 text-base-content shadow-inner w-full">
-        <p>
-          © {new Date().getFullYear()} Movies HD
-        </p>
+        <div className="space-y-2">
+          <p className="text-sm text-base-content/80">Stream picks. Build your wishlist.</p>
+          <p className="text-sm">© {new Date().getFullYear()} Movies HD</p>
+          <p className="text-xs text-base-content/60">Data loaded locally from /movies.json</p>
+
+          <div className="flex items-center justify-center gap-5 pt-1">
+            <a
+              href="#"
+              className="link link-hover text-sm inline-flex items-center gap-2"
+              onClick={(e) => e.preventDefault()}
+            >
+              <FaInfoCircle />
+              About
+            </a>
+            <a
+              href="#"
+              className="link link-hover text-sm inline-flex items-center gap-2"
+              onClick={(e) => e.preventDefault()}
+            >
+              <FaLock />
+              Privacy
+            </a>
+            <a
+              href="#"
+              className="link link-hover text-sm inline-flex items-center gap-2"
+              onClick={(e) => e.preventDefault()}
+            >
+              <FaGithub />
+              GitHub
+            </a>
+            <a
+              href="#"
+              className="link link-hover text-sm inline-flex items-center gap-2"
+              onClick={(e) => e.preventDefault()}
+            >
+              <FaEnvelope />
+              Contact
+            </a>
+          </div>
+        </div>
       </footer>
 
     </div>

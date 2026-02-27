@@ -1,4 +1,5 @@
 import BaseMovieCard from "./BaseMovieCard";
+import { FaChevronDown } from "react-icons/fa";
 
 function defaultMovieKey(movie) {
   return `${movie?.title ?? "movie"}-${movie?.releasing_year ?? ""}`;
@@ -33,9 +34,12 @@ export default function RecommendedRow({
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-2xl font-semibold">{title}</h2>
 
-        <details className="dropdown dropdown-bottom">
+        <details className="dropdown dropdown-bottom group">
           <summary className="btn btn-sm btn-outline list-none" aria-label="Sort movies">
-            By: {sortLabel}
+            <span className="flex items-center gap-2">
+              <span>By: {sortLabel}</span>
+              <FaChevronDown className="transition-transform group-open:rotate-180" />
+            </span>
           </summary>
 
           <ul className="dropdown-content menu bg-base-100 rounded-box z-10 mt-2 w-52 p-2 shadow">
