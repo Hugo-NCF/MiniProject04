@@ -1,3 +1,5 @@
+import { FaHeart, FaRegHeart, FaThumbsDown, FaThumbsUp } from "react-icons/fa";
+
 function formatValue(value) {
   if (value == null) return "-";
   if (Array.isArray(value)) return value.join(", ");
@@ -84,7 +86,15 @@ function PreciseStars({ value, max = 10 }) {
   );
 }
 
-export default function SelectedMovieDetails({ movie }) {
+export default function SelectedMovieDetails({
+  movie,
+  liked = false,
+  disliked = false,
+  wishlisted = false,
+  onToggleLike,
+  onToggleDislike,
+  onToggleWishlist,
+}) {
   if (!movie) return null;
 
   const title = movie?.title ?? "Untitled";
@@ -140,10 +150,48 @@ export default function SelectedMovieDetails({ movie }) {
               </p>
             )}
 
-            {(movie?.director || movie?.budget) && (
-              <div className="mt-25 text-sm text-base-content/70 space-y-1">
-                {movie?.director && <div>Director: {formatValue(movie.director)}</div>}
-                {movie?.budget && <div>Budget: {formatValue(movie.budget)}</div>}
+            {(movie?.director || movie?.budget || onToggleLike || onToggleDislike || onToggleWishlist) && (
+              <div className="mt-25 flex items-start justify-between gap-4 text-sm text-base-content/70">
+                <div className="space-y-1">
+                  {movie?.director && <div>Director: {formatValue(movie.director)}</div>}
+                  {movie?.budget && <div>Budget: {formatValue(movie.budget)}</div>}
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    className={["btn btn-sm btn-square", liked ? "btn-active" : "btn-outline"].join(" ")}
+                    onClick={onToggleLike}
+                    aria-pressed={liked}
+                    disabled={!onToggleLike}
+                    title="Like"
+                  >
+                    <FaThumbsUp />
+                  </button>
+
+                  <button
+                    type="button"
+                    className={["btn btn-sm btn-square", disliked ? "btn-active" : "btn-outline"].join(" ")}
+                    onClick={onToggleDislike}
+                    aria-pressed={disliked}
+                    disabled={!onToggleDislike}
+                    title="Dislike"
+                  >
+                    <FaThumbsDown />
+                  </button>
+
+                  <button
+                    type="button"
+                    className={["btn btn-sm", wishlisted ? "btn-active" : "btn-outline"].join(" ")}
+                    onClick={onToggleWishlist}
+                    aria-pressed={wishlisted}
+                    disabled={!onToggleWishlist}
+                    title="Add to wishlist"
+                  >
+                    {wishlisted ? <FaHeart /> : <FaRegHeart />}
+                    <span className="hidden sm:inline">Wishlist</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

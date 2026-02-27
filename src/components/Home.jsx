@@ -24,6 +24,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedKey, setSelectedKey] = useState(null);
+  const [likedKeys, setLikedKeys] = useState(() => new Set());
+  const [dislikedKeys, setDislikedKeys] = useState(() => new Set());
+  const [wishlistedKeys, setWishlistedKeys] = useState(() => new Set());
 
   const recommendedMovies = useMemo(() => pickRandomSubset(movies, 12), [movies]);
 
@@ -82,9 +85,64 @@ export default function Home() {
     );
   }
 
+  const isLiked = selectedKey != null && likedKeys.has(selectedKey);
+  const isDisliked = selectedKey != null && dislikedKeys.has(selectedKey);
+  const isWishlisted = selectedKey != null && wishlistedKeys.has(selectedKey);
+
+  function toggleLike() {
+    if (!selectedKey) return;
+
+    setLikedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(selectedKey)) next.delete(selectedKey);
+      else next.add(selectedKey);
+      return next;
+    });
+    setDislikedKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(selectedKey);
+      return next;
+    });
+  }
+
+  function toggleDislike() {
+    if (!selectedKey) return;
+
+    setDislikedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(selectedKey)) next.delete(selectedKey);
+      else next.add(selectedKey);
+      return next;
+    });
+    setLikedKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(selectedKey);
+      return next;
+    });
+  }
+
+  function toggleWishlist() {
+    if (!selectedKey) return;
+
+    setWishlistedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(selectedKey)) next.delete(selectedKey);
+      else next.add(selectedKey);
+      return next;
+    });
+  }
+
   return (
     <div className="space-y-8">
-      <SelectedMovieDetails movie={selectedMovie} />
+      <SelectedMovieDetails
+        movie={selectedMovie}
+        liked={isLiked}
+        disliked={isDisliked}
+        wishlisted={isWishlisted}
+        onToggleLike={toggleLike}
+        onToggleDislike={toggleDislike}
+        onToggleWishlist={toggleWishlist}
+      />
 
       <RecommendedRow
         movies={recommendedMovies}
