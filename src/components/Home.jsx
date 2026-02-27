@@ -1,8 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RecommendedRow from "./RecommendedRow";
+import SelectedMovieDetails from "./SelectedMovieDetails";
 
 function getMovieKey(movie) {
-  return `${movie?.title ?? "movie"}-${movie?.releasing_year ?? ""}`;
+  return `${movie?.title ?? "movie"}-${movie?.releasing_year ?? ""}-${movie?.director ?? ""}`;
+}
+
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function pickRandomSubset(list, count) {
+  const arr = [...list];
+  shuffleInPlace(arr);
+  return arr.slice(0, Math.min(count, arr.length));
 }
 
 export default function Home() {
@@ -10,6 +24,19 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedKey, setSelectedKey] = useState(null);
+
+  const recommendedMovies = useMemo(() => pickRandomSubset(movies, 12), [movies]);
+
+  useEffect(() => {
+    if (selectedKey != null) return;
+    if (!recommendedMovies.length) return;
+    setSelectedKey(getMovieKey(recommendedMovies[0]));
+  }, [recommendedMovies, selectedKey]);
+
+  const selectedMovie = useMemo(() => {
+    if (!selectedKey) return null;
+    return movies.find((m) => getMovieKey(m) === selectedKey) ?? null;
+  }, [movies, selectedKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,9 +84,10 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
+      <SelectedMovieDetails movie={selectedMovie} />
+
       <RecommendedRow
-        movies={movies}
-        count={12}
+        movies={recommendedMovies}
         selectedKey={selectedKey}
         getMovieKey={getMovieKey}
         onSelect={(movie) => setSelectedKey(getMovieKey(movie))}
