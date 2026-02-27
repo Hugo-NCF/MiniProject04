@@ -24,6 +24,7 @@ export default function Home({ movies = [], browseSelection = null }) {
   const [likedKeys, setLikedKeys] = useState(() => new Set());
   const [dislikedKeys, setDislikedKeys] = useState(() => new Set());
   const [wishlistedKeys, setWishlistedKeys] = useState(() => new Set());
+  const [sortMode, setSortMode] = useState("release");
 
   const recommendedMovies = useMemo(() => pickRandomSubset(movies, 12), [movies]);
 
@@ -49,15 +50,55 @@ export default function Home({ movies = [], browseSelection = null }) {
     return recommendedMovies;
   }, [browseSelection, movies, recommendedMovies]);
 
+  const sortedMovies = useMemo(() => {
+    const list = [...displayedMovies];
+
+    if (sortMode === "rating") {
+      list.sort((a, b) => {
+        const ar = Number(a?.imdb_rating);
+        const br = Number(b?.imdb_rating);
+        const aVal = Number.isFinite(ar) ? ar : -Infinity;
+        const bVal = Number.isFinite(br) ? br : -Infinity;
+        if (bVal !== aVal) return bVal - aVal;
+        return String(a?.title ?? "").localeCompare(String(b?.title ?? ""), undefined, {
+          sensitivity: "base",
+        });
+      });
+      return list;
+    }
+
+    if (sortMode === "alpha") {
+      list.sort((a, b) =>
+        String(a?.title ?? "").localeCompare(String(b?.title ?? ""), undefined, {
+          sensitivity: "base",
+        }),
+      );
+      return list;
+    }
+
+    // Default: release date (latest -> oldest)
+    list.sort((a, b) => {
+      const ay = Number(a?.releasing_year);
+      const by = Number(b?.releasing_year);
+      const aVal = Number.isFinite(ay) ? ay : -Infinity;
+      const bVal = Number.isFinite(by) ? by : -Infinity;
+      if (bVal !== aVal) return bVal - aVal;
+      return String(a?.title ?? "").localeCompare(String(b?.title ?? ""), undefined, {
+        sensitivity: "base",
+      });
+    });
+    return list;
+  }, [displayedMovies, sortMode]);
+
   useEffect(() => {
-    if (!displayedMovies.length) return;
+    if (!sortedMovies.length) return;
 
     const stillVisible =
-      selectedKey != null && displayedMovies.some((m) => getMovieKey(m) === selectedKey);
+      selectedKey != null && sortedMovies.some((m) => getMovieKey(m) === selectedKey);
 
     if (stillVisible) return;
-    setSelectedKey(getMovieKey(displayedMovies[0]));
-  }, [displayedMovies, selectedKey]);
+    setSelectedKey(getMovieKey(sortedMovies[0]));
+  }, [sortedMovies, selectedKey]);
 
   const selectedMovie = useMemo(() => {
     if (!selectedKey) return null;
@@ -138,7 +179,9 @@ export default function Home({ movies = [], browseSelection = null }) {
       ) : (
         <RecommendedRow
           title={listTitle}
-          movies={displayedMovies}
+          movies={sortedMovies}
+          sortMode={sortMode}
+          onSortModeChange={setSortMode}
           selectedKey={selectedKey}
           getMovieKey={getMovieKey}
           onSelect={(movie) => setSelectedKey(getMovieKey(movie))}
