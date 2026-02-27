@@ -6,6 +6,7 @@ function defaultMovieKey(movie) {
 
 export default function RecommendedRow({
   movies = [],
+  title = "Recommended",
   selectedKey = null,
   getMovieKey = defaultMovieKey,
   onSelect,
@@ -14,7 +15,7 @@ export default function RecommendedRow({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-2xl font-semibold">Recommended</h2>
+      <h2 className="text-2xl font-semibold">{title}</h2>
 
       <div className="carousel carousel-center w-full space-x-4 rounded-box">
         {movies.map((m, idx) => (

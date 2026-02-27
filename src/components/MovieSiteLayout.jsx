@@ -1,25 +1,97 @@
-import { FaFilm, FaSearch } from "react-icons/fa";
+import { FaChevronDown, FaFilm } from "react-icons/fa";
 
-function MovieSiteLayout({ children }) {
+function MovieSiteLayout({ children, browseOptions, onBrowseSelect }) {
+  const ageGroups = browseOptions?.ageGroups ?? [];
+  const genres = browseOptions?.genres ?? [];
+  const decades = browseOptions?.decades ?? [];
+
+  function closeBrowseDropdown(e) {
+    const details = e?.currentTarget?.closest?.("details.dropdown");
+    if (details) details.removeAttribute("open");
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-base-200 w-full">
       
       {/* Header */}
       <header className="navbar bg-base-100 shadow-md px-6 w-full">
 
-  {/* Left: Logo + Title + Search */}
+  {/* Left: Logo + Title + Browse */}
   <div className="flex-1 flex items-center gap-6">
     <FaFilm className="text-2xl text-primary" />
     <h1 className="text-2xl font-bold">Movies HD</h1>
 
-    <label className="input input-bordered flex items-center gap-2 w-80">
-      <FaSearch className="opacity-60" />
-      <input
-        type="text"
-        className="grow"
-        placeholder="Search movies..."
-      />
-    </label>
+    <details className="dropdown group">
+      <summary className="btn btn-ghost list-none">
+        Browse
+        <FaChevronDown className="ml-1 transition-transform group-open:rotate-180" />
+      </summary>
+
+      <ul className="dropdown-content menu bg-base-100 rounded-box z-10 mt-2 w-52 p-2 shadow">
+        <li>
+          <details>
+            <summary>Age group</summary>
+            <ul>
+              {ageGroups.map((g) => (
+                <li key={g}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      onBrowseSelect?.({ type: "age_group", value: g });
+                      closeBrowseDropdown(e);
+                    }}
+                  >
+                    {g}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>Genre</summary>
+            <ul>
+              {genres.map((g) => (
+                <li key={g}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      onBrowseSelect?.({ type: "genre", value: g });
+                      closeBrowseDropdown(e);
+                    }}
+                  >
+                    {g}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>Year</summary>
+            <ul>
+              {decades.map((d) => (
+                <li key={d?.start ?? d?.label}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      onBrowseSelect?.({ type: "decade", value: d?.start });
+                      closeBrowseDropdown(e);
+                    }}
+                  >
+                    {d?.label ?? String(d)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </li>
+      </ul>
+    </details>
   </div>
 
   {/* Right: Wishlist + Avatar */}

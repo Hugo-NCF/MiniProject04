@@ -19,10 +19,7 @@ function pickRandomSubset(list, count) {
   return arr.slice(0, Math.min(count, arr.length));
 }
 
-export default function Home() {
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
+export default function Home({ movies = [], browseSelection = null }) {
   const [selectedKey, setSelectedKey] = useState(null);
   const [likedKeys, setLikedKeys] = useState(() => new Set());
   const [dislikedKeys, setDislikedKeys] = useState(() => new Set());
@@ -30,60 +27,42 @@ export default function Home() {
 
   const recommendedMovies = useMemo(() => pickRandomSubset(movies, 12), [movies]);
 
+  const displayedMovies = useMemo(() => {
+    if (!browseSelection) return recommendedMovies;
+
+    const { type, value } = browseSelection;
+    if (type === "age_group") {
+      return movies.filter((m) => m?.age_group === value);
+    }
+    if (type === "genre") {
+      return movies.filter((m) => m?.genre === value);
+    }
+    if (type === "decade") {
+      const start = Number(value);
+      if (!Number.isFinite(start)) return [];
+      const end = start + 9;
+      return movies.filter((m) => {
+        const y = Number(m?.releasing_year);
+        return Number.isFinite(y) && y >= start && y <= end;
+      });
+    }
+    return recommendedMovies;
+  }, [browseSelection, movies, recommendedMovies]);
+
   useEffect(() => {
-    if (selectedKey != null) return;
-    if (!recommendedMovies.length) return;
-    setSelectedKey(getMovieKey(recommendedMovies[0]));
-  }, [recommendedMovies, selectedKey]);
+    if (!displayedMovies.length) return;
+
+    const stillVisible =
+      selectedKey != null && displayedMovies.some((m) => getMovieKey(m) === selectedKey);
+
+    if (stillVisible) return;
+    setSelectedKey(getMovieKey(displayedMovies[0]));
+  }, [displayedMovies, selectedKey]);
 
   const selectedMovie = useMemo(() => {
     if (!selectedKey) return null;
     return movies.find((m) => getMovieKey(m) === selectedKey) ?? null;
   }, [movies, selectedKey]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setErrorMsg("");
-
-        const res = await fetch("/movies.json");
-        if (!res.ok) throw new Error(`Failed to load /movies.json (${res.status})`);
-
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : [];
-
-        if (!cancelled) setMovies(list);
-      } catch (e) {
-        if (!cancelled) setErrorMsg(e?.message ?? "Failed to load movies.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <span className="loading loading-spinner loading-lg" />
-      </div>
-    );
-  }
-
-  if (errorMsg) {
-    return (
-      <div className="alert alert-error">
-        <span>{errorMsg}</span>
-      </div>
-    );
-  }
 
   const isLiked = selectedKey != null && likedKeys.has(selectedKey);
   const isDisliked = selectedKey != null && dislikedKeys.has(selectedKey);
@@ -132,6 +111,14 @@ export default function Home() {
     });
   }
 
+  const listTitle = useMemo(() => {
+    if (!browseSelection) return "Recommended";
+    if (browseSelection.type === "age_group") return `Age group: ${browseSelection.value}`;
+    if (browseSelection.type === "genre") return `Genre: ${browseSelection.value}`;
+    if (browseSelection.type === "decade") return `${browseSelection.value}s`;
+    return "Results";
+  }, [browseSelection]);
+
   return (
     <div className="space-y-8">
       <SelectedMovieDetails
@@ -144,12 +131,19 @@ export default function Home() {
         onToggleWishlist={toggleWishlist}
       />
 
-      <RecommendedRow
-        movies={recommendedMovies}
-        selectedKey={selectedKey}
-        getMovieKey={getMovieKey}
-        onSelect={(movie) => setSelectedKey(getMovieKey(movie))}
-      />
+      {browseSelection && displayedMovies.length === 0 ? (
+        <div className="alert">
+          <span>No movies match this selection.</span>
+        </div>
+      ) : (
+        <RecommendedRow
+          title={listTitle}
+          movies={displayedMovies}
+          selectedKey={selectedKey}
+          getMovieKey={getMovieKey}
+          onSelect={(movie) => setSelectedKey(getMovieKey(movie))}
+        />
+      )}
     </div>
   );
 }
